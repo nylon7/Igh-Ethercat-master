@@ -93,6 +93,53 @@ void cyclic_task()
     ecrt_domain_process(domain_r);
     ecrt_domain_process(domain_w);
 
+    temp[0]=EC_READ_U16(domain_w_pd + status_word);
+    temp[1]=EC_READ_U32(domain_w_pd + actual_pos);
+    
+    if (counter) 
+    {
+    	counter--;
+    } 
+    else 
+    { 
+    // do this at 1 Hz
+    counter = FREQUENCY;
+    blink = !blink;
+    }
+
+    // write process data
+    if(servo_flag==1)
+    {	//servo off
+    	EC_WRITE_U16(domain_r_pd+ctrl_word, 0x0006 );
+        //deactive++;
+    }
+    else if( (temp[0]&0x004f) == 0x0040  )
+    {
+        EC_WRITE_U16(domain_r_pd+ctrl_word, 0x0006 );
+        printf("%x\n",temp[0]);
+    }
+    else if( (temp[0]&0x006f) == 0x0021)
+    {
+        EC_WRITE_U16(domain_r_pd+ctrl_word, 0x0007 );
+        printf("%x\n",temp[0]);
+    }
+    else if( (temp[0]&0x006f) == 0x0023)
+    {
+	EC_WRITE_U16(domain_r_pd+ctrl_word, 0x000f);
+	EC_WRITE_S32(domain_r_pd+target_pos, 0);
+        EC_WRITE_S32(domain_r_pd+tar_velo, 0xfffff);
+        EC_WRITE_S32(domain_r_pd+max_torq, 0xf00);
+        EC_WRITE_S32(domain_r_pd+modeofoper, 8);
+        printf("%x\n",temp[0]);
+     }
+    //operation enabled 
+    else if ((temp[0]&0x006f) == 0x0027)
+    {            	
+        EC_WRITE_S32(domain_r_pd+target_pos, (move_value+=2000) );
+        EC_WRITE_U16(domain_r_pd+ctrl_word, 0x001f);
+        printf("%x\n",temp[0]);
+    }
+
     // send process data
     ecrt_domain_queue(domain_r);
     ecrt_domain_queue(domain_w);
