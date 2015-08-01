@@ -235,6 +235,41 @@ void check_master_state(void)
 
 void cyclic_task()
 {
+    struct timespec wakeupTime, time;
+    // get current time
+    clock_gettime(CLOCK_TO_USE, &wakeupTime);
+
+	while(1) 
+	{
+
+		if(deactive==1)
+		{
+			break;
+		}
+
+		wakeupTime = timespec_add(wakeupTime, cycletime);
+     		clock_nanosleep(CLOCK_TO_USE, TIMER_ABSTIME, &wakeupTime, NULL);
+
+		ecrt_master_receive(master);
+		ecrt_domain_process(domain_r);
+		ecrt_domain_process(domain_w);
+		
+	
+		temp[0]=EC_READ_U16(domain_w_pd + status_word);
+		temp[1]=EC_READ_U32(domain_w_pd + actual_pos);
+  
+		
+		if (counter) 
+		{
+			counter--;
+		} 
+		
+		else 
+		{ 
+			// do this at 1 Hz
+			counter = FREQUENCY;
+			blink = !blink;
+		}
 
 
 		// write process data
@@ -271,6 +306,35 @@ void cyclic_task()
 			EC_WRITE_U16(domain_r_pd+ctrl_word, 0x001f);
 
 		}
+		// write application time to master
+		clock_gettime(CLOCK_TO_USE, &time);
+		ecrt_master_application_time(master, TIMESPEC2NS(time));
+
+		
+		if (sync_ref_counter) 
+		{
+			sync_ref_counter--;
+		} 
+
+		else 
+		{
+			sync_ref_counter = 1; // sync every cycle
+			ecrt_master_sync_reference_clock(master);
+		}
+
+		ecrt_master_sync_slave_clocks(master);
+
+		
+		
+		// send process data
+		ecrt_domain_queue(domain_r);
+		ecrt_domain_queue(domain_w);
+		
+		ecrt_master_send(master);
+
+		
+
+	}
 
 }
 
