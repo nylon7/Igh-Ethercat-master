@@ -249,5 +249,89 @@ void cyclic_task()
 
 int main(int argc, char **argv)
 {
+    ec_slave_config_t *sc;
+	
+	
+    if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1) 
+    {
+		perror("mlockall failed");
+		return -1;
+    }
 
+    master = ecrt_request_master(0);
+
+    if (!master)
+	        return -1;
+
+    domain_r = ecrt_master_create_domain(master);
+    
+    if (!domain_r)
+	        return -1;
+	
+    domain_w = ecrt_master_create_domain(master);
+
+    if (!domain_w)
+	        return -1;
+			
+	 	
+	    
+    if (!(sc = ecrt_master_slave_config(master, pana, panasonic))) 
+    {
+	fprintf(stderr, "Failed to get slave1 configuration.\n");
+        return -1;
+    }   
+
+#if SDO_ACCESS
+
+    if (ecrt_slave_config_sdo8(sc, 0x6060, 0, 8))
+    {
+        return -1;
+    }
+
+#endif
+
+ 
+#if CONFIGURE_PDOS
+
+    printf("Configuring PDOs...\n");
+	
+    if (ecrt_slave_config_pdos(sc, EC_END, slave_0_syncs)) 
+    {
+        fprintf(stderr, "Failed to configure 1st PDOs.\n");
+        return -1;
+    }
+	
+#endif
+
+
+	if (ecrt_domain_reg_pdo_entry_list(domain_r, domain_r_regs))
+        {
+        	fprintf(stderr, "1st motor RX_PDO entry registration failed!\n");
+        	return -1;
+    	}	
+	
+	if (ecrt_domain_reg_pdo_entry_list(domain_w, domain_w_regs)) 
+	{
+        	fprintf(stderr, "1st motor TX_PDO entry registration failed!\n");
+        	return -1;
+    	}
+		
+	
+	ecrt_slave_config_dc(sc,0x0300,500000,0,0,0);  
+
+    printf("Activating master...\n");
+	
+    if (ecrt_master_activate(master))
+        return -1;
+
+    if (!(domain_r_pd = ecrt_domain_data(domain_r))) 
+    {
+        return -1;
+    }
+
+    if (!(domain_w_pd = ecrt_domain_data(domain_w))) 
+    {
+        return -1;
+    }
+	
 }
