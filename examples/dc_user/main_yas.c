@@ -312,5 +312,18 @@ int main(int argc, char **argv)
     {
         return -1;
     }
+
+	
+    pid_t pid = getpid();
+    if (setpriority(PRIO_PROCESS, pid, -20))
+        fprintf(stderr, "Warning: Failed to set priority: %s\n",
+                strerror(errno));
+
+	signal( SIGINT , endsignal ); //interrupt program		
+	printf("Starting cyclic function.\n");
+    	cyclic_task();
+	ecrt_release_master(master);
+	
+    return 0;
 }
 
