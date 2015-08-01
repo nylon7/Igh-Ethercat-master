@@ -145,4 +145,33 @@ int main(int argc, char **argv)
     {
         return -1;
     }
+
+    pid_t pid = getpid();
+
+    if (setpriority(PRIO_PROCESS, pid, -19))
+        fprintf(stderr, "Warning: Failed to set priority: %s\n",strerror(errno));
+
+    sa.sa_handler = signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    if (sigaction(SIGALRM, &sa, 0)) 
+    {
+        fprintf(stderr, "Failed to install signal handler!\n");
+        return -1;
+    }
+
+    printf("Started.\n");
+    
+    while (1) 
+    {
+        pause();
+
+        while (sig_alarms != user_alarms) 
+        {
+            cyclic_task();
+            user_alarms++;
+        }
+    }
+
+    return 0;
 }
