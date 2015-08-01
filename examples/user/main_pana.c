@@ -127,9 +127,58 @@ void cyclic_task()
 	// receive process data
     	ecrt_master_receive(master);
    	ecrt_domain_process(domain);
+        
+	temp[0]=EC_READ_U16(domain_pd + status_word);
+        temp[1]=EC_READ_S32(domain_pd + mode_display);
+                
+	if (counter) 
+        {
+        	counter--;
+        } 
+        else 
+        { 
+        	// do this at 1 Hz
+                counter = FREQUENCY;
+		blink = !blink;
+        }
+	
+	printf("after value =%x\n",temp[0]);	
+	
+	// write process data
 
+        if(servo_flog==1)
+        {
+         	//servo off
+         	EC_WRITE_U16(domain_pd+ctrl_word, 0x0006 );
+        }
+
+        else if( (temp[0]&0x004f) == 0x0040  )
+        {
+                EC_WRITE_U16(domain_pd+ctrl_word, 0x0006 );
+        }
+
+        else if( (temp[0]&0x006f) == 0x0021)
+        {
+                EC_WRITE_U16(domain_pd+ctrl_word, 0x0007 );
+	}
+
+        else if( (temp[0]&0x006f) == 0x0023)
+        {
+             	EC_WRITE_U16(domain_pd+ctrl_word, 0x000f );
+		EC_WRITE_S32(domain_pd+tar_pos,0);
+		EC_WRITE_S32(domain_pd+tar_vel, 0xffff);
+                EC_WRITE_S32(domain_pd+max_torq, 0xf00);
+        }
+	//operation enabled
+
+        else if( (temp[0]&0x006f) == 0x0027)
+	{
+                EC_WRITE_S32(domain_pd+tar_pos, (value+=1) );
+                EC_WRITE_U16(domain_pd+ctrl_word, 0x001f);
+        }
 
 	// send process data
+
     	ecrt_domain_queue(domain);
     	ecrt_master_send(master);
 	
