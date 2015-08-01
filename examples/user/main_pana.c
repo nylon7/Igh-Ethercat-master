@@ -141,5 +141,52 @@ void signal_handler(int signum) {
 
 int main(int argc, char **argv)
 {
+    struct sigaction sa;
+
+    master = ecrt_request_master(0);
+    if (!master)
+        return -1;
+
+    domain = ecrt_master_create_domain(master);
+    if (!domain)
+        return -1;
+
+
+    if (!(sc = ecrt_master_slave_config(
+        master, pana, panasonic))) {
+        fprintf(stderr, "Failed to get slave1 configuration.\n");
+        return -1;
+        }
+
+//SDO_ACCESS
+    if (ecrt_slave_config_sdo8(sc, 0x6060, 0, 8)){
+	return -1;
+    }  
+
+
+
+//CONFIGURE_PDOS
+    printf("Configuring PDOs...\n");
+
+    if (ecrt_slave_config_pdos(sc, EC_END, slave_0_syncs)) {
+        fprintf(stderr, "Failed to configure 1st PDOs.\n");
+        return -1;
+    }
+
+
+
+
+    if (ecrt_domain_reg_pdo_entry_list(domain, domain_regs)) {
+        fprintf(stderr, "PDO entry registration failed!\n");
+        return -1;
+    }
+
+    printf("Activating master...\n");
+    if (ecrt_master_activate(master))
+        return -1;
+
+    if (!(domain_pd = ecrt_domain_data(domain))) {
+        return -1;
+    }
 
 }
