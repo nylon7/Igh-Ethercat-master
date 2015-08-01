@@ -129,8 +129,10 @@ void cyclic_task()
 
 /****************************************************************************/
 
-void signal_handler(int signum) {
-    switch (signum) {
+void signal_handler(int signum) 
+{
+    switch (signum) 
+    {
         case SIGALRM:
             sig_alarms++;
 	    break;
@@ -152,14 +154,15 @@ int main(int argc, char **argv)
         return -1;
 
 
-    if (!(sc = ecrt_master_slave_config(
-        master, pana, panasonic))) {
+    if (!(sc = ecrt_master_slave_config(master, pana, panasonic))) 
+    {
         fprintf(stderr, "Failed to get slave1 configuration.\n");
         return -1;
-        }
+    }
 
 //SDO_ACCESS
-    if (ecrt_slave_config_sdo8(sc, 0x6060, 0, 8)){
+    if (ecrt_slave_config_sdo8(sc, 0x6060, 0, 8))
+    {
 	return -1;
     }  
 
@@ -168,7 +171,8 @@ int main(int argc, char **argv)
 //CONFIGURE_PDOS
     printf("Configuring PDOs...\n");
 
-    if (ecrt_slave_config_pdos(sc, EC_END, slave_0_syncs)) {
+    if (ecrt_slave_config_pdos(sc, EC_END, slave_0_syncs)) 
+    {
         fprintf(stderr, "Failed to configure 1st PDOs.\n");
         return -1;
     }
@@ -176,7 +180,8 @@ int main(int argc, char **argv)
 
 
 
-    if (ecrt_domain_reg_pdo_entry_list(domain, domain_regs)) {
+    if (ecrt_domain_reg_pdo_entry_list(domain, domain_regs)) 
+    {
         fprintf(stderr, "PDO entry registration failed!\n");
         return -1;
     }
@@ -185,8 +190,38 @@ int main(int argc, char **argv)
     if (ecrt_master_activate(master))
         return -1;
 
-    if (!(domain_pd = ecrt_domain_data(domain))) {
+    if (!(domain_pd = ecrt_domain_data(domain))) 
+    {
         return -1;
     }
 
+
+    pid_t pid = getpid();
+    if (setpriority(PRIO_PROCESS, pid, -19))
+        fprintf(stderr, "Warning: Failed to set priority: %s\n",trerror(errno));
+
+    sa.sa_handler = signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    if (sigaction(SIGALRM, &sa, 0)) 
+    {
+        fprintf(stderr, "Failed to install signal handler!\n");
+        return -1;
+    }
+
+
+    printf("Started.\n");
+
+    while (1) 
+    {
+        pause();
+
+        while (sig_alarms != user_alarms) 
+        {
+            cyclic_task();
+            user_alarms++;
+        }
+    }
+
+    return 0;
 }
