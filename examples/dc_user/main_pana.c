@@ -164,3 +164,90 @@ static ec_sync_info_t slave_0_syncs[] =
 
 #endif
 /***********************************************************************/
+
+struct timespec timespec_add(struct timespec time1, struct timespec time2)
+{
+	struct timespec result;
+
+	if ((time1.tv_nsec + time2.tv_nsec) >= NSEC_PER_SEC) 
+	{
+		result.tv_sec = time1.tv_sec + time2.tv_sec + 1;
+		result.tv_nsec = time1.tv_nsec + time2.tv_nsec - NSEC_PER_SEC;
+	} 
+	else 
+	{
+		result.tv_sec = time1.tv_sec + time2.tv_sec;
+		result.tv_nsec = time1.tv_nsec + time2.tv_nsec;
+	}
+
+	return result;
+}
+
+/*****************************************************************************/
+
+void endsignal(int sig)
+{	
+	servo_flag = 1;
+	signal( SIGINT , SIG_DFL );
+}
+
+/*****************************************************************************/
+
+
+void check_domain_r_state(void)
+{
+    ec_domain_state_t ds;
+    ecrt_domain_state(domain_r, &ds);
+
+	//struct timespec time_wc1,time_wc2;
+	if (ds.working_counter != domain_r_state.working_counter)
+		printf("domain_r: WC %u.\n", ds.working_counter);
+	if (ds.wc_state != domain_r_state.wc_state)
+        	printf("domain_r: State %u.\n", ds.wc_state);
+
+    domain_r_state = ds;
+}
+
+
+void check_domain_w_state(void)
+{
+    ec_domain_state_t ds2;
+    ecrt_domain_state(domain_w, &ds2);
+
+	if (ds2.working_counter != domain_w_state.working_counter)
+		printf("domain_w: WC %u.\n", ds2.working_counter);
+	if (ds2.wc_state != domain_w_state.wc_state)
+        	printf("domain_w: State %u.\n", ds2.wc_state);
+
+    domain_w_state = ds2;
+}
+
+/*****************************************************************************/
+
+void check_master_state(void)
+{
+    ec_master_state_t ms;
+
+    ecrt_master_state(master, &ms);
+
+    if (ms.slaves_responding != master_state.slaves_responding)
+        printf("%u slave(s).\n", ms.slaves_responding);
+    if (ms.al_states != master_state.al_states)
+        printf("AL states: 0x%02X.\n", ms.al_states);
+    if (ms.link_up != master_state.link_up)
+        printf("Link is %s.\n", ms.link_up ? "up" : "down");
+
+    master_state = ms;
+}
+
+/****************************************************************************/
+
+void cyclic_task()
+{
+
+}
+
+int main(int argc, char **argv)
+{
+
+}
