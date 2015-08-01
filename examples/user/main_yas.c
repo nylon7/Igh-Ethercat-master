@@ -39,3 +39,23 @@ float move_value = 0;
 
 static unsigned int counter = 0;
 static unsigned int blink = 0;
+
+
+void cyclic_task()
+{
+
+}
+
+//
+void signal_handler(int signum) {
+    switch (signum) {
+        case SIGALRM:
+            sig_alarms++;
+	    break;
+    }
+}
+
+int main(int argc, char **argv)
+{
+
+}
