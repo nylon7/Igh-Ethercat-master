@@ -58,6 +58,70 @@ float move_value = 0;
 static unsigned int counter = 0;
 static unsigned int blink = 0;
 
+//pdo entry
+const static ec_pdo_entry_reg_t domain1_regs[] = 
+{
+	{pana,panasonic,0x6040,00,	&ctrl_word		},
+	{pana,panasonic,0x6060,00,	&mode			},
+	{pana,panasonic,0x6071,00,	&tar_torq		},
+	{pana,panasonic,0x6072,00,	&max_torq		},
+	{pana,panasonic,0x607a,00,	&tar_pos		},
+	{pana,panasonic,0x6080,00,	&max_speed		},
+	{pana,panasonic,0x60b8,00,	&touch_probe_func	},
+	{pana,panasonic,0x60ff,00,	&tar_vel		},
+	{pana,panasonic,0x603f,00,	&error_code		},
+	{pana,panasonic,0x6041,00,	&status_word		},
+	{pana,panasonic,0x6061,00,	&mode_display		},
+	{pana,panasonic,0x6064,00,	&pos_act		},
+	{pana,panasonic,0x606c,00,	&vel_act		},
+	{pana,panasonic,0x6077,00,	&torq_act		},
+	{pana,panasonic,0x60b9,00, &touch_probe_status	},
+	{pana,panasonic,0x60ba,00,	&touch_probe_pos	},
+	{pana,panasonic,0x60fd,00,	&digital_input		},
+        {}
+};
+
+
+//pdo setting
+static ec_pdo_entry_info_t slave_0_pdo_entries[] = 
+{
+	{0x6040, 0x00, 16},
+	{0x6060, 0x00, 8 },
+	{0x6071, 0x00, 16},
+	{0x6072, 0x00, 16},
+	{0x607a, 0x00, 32},
+	{0x6080, 0x00, 32},
+	{0x60b8, 0x00, 16},
+	{0x60ff, 0x00, 32},
+	{0x603f, 0x00, 16},
+	{0x6041, 0x00, 16},
+	{0x6061, 0x00, 8 },
+	{0x6064, 0x00, 32},
+	{0x606c, 0x00, 32},
+	{0x6077, 0x00, 16},
+	{0x60b9, 0x00, 16},
+	{0x60ba, 0x00, 32},
+	{0x60fd, 0x00, 32},     		
+};//{index,subindex,lenth}
+
+tatic ec_pdo_info_t slave_0_pdos[] = 
+{
+	{0x1600, 8, slave_0_pdo_entries + 0},
+        {0x1a00, 9, slave_0_pdo_entries + 8},
+};
+
+
+static ec_sync_info_t slave_0_syncs[] = 
+{
+        {0, EC_DIR_OUTPUT, 0, NULL,EC_WD_DISABLE},
+        {1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE},
+        {2, EC_DIR_OUTPUT, 1, slave_0_pdos + 0, EC_WD_DISABLE},
+        {3, EC_DIR_INPUT, 1, slave_0_pdos + 1, EC_WD_DISABLE},
+        {0xff}
+};
+
+
+
 void cyclic_task()
 {
 
