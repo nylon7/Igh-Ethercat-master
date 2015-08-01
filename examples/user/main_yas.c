@@ -102,5 +102,47 @@ void signal_handler(int signum) {
 
 int main(int argc, char **argv)
 {
+    master = ecrt_request_master(0);
+    if (!master)
+        return -1;
 
+    domain_r = ecrt_master_create_domain(master);
+    if (!domain_r)
+        return -1;
+    domain_w = ecrt_master_create_domain(master);
+    if (!domain_w)
+	return -1;
+
+    if (!(sc = ecrt_master_slave_config(master, yas, yaskawa))) 
+    {
+        fprintf(stderr, "Failed to get slave1 configuration.\n");
+        return -1;
+    }
+
+
+    if (ecrt_domain_reg_pdo_entry_list(domain_r, domain_r_regs)) 
+    {
+        fprintf(stderr, "PDO entry registration failed!\n");
+        return -1;
+    }
+
+    if (ecrt_domain_reg_pdo_entry_list(domain_w, domain_w_regs)) 
+    {
+	fprintf(stderr, "PDO entry registration failed!\n");
+	return -1;
+    }
+
+    printf("Activating master...\n");
+    if (ecrt_master_activate(master))
+        return -1;
+
+    if (!(domain_r_pd = ecrt_domain_data(domain_r))) 
+    {
+        return -1;
+    }
+
+    if (!(domain_w_pd = ecrt_domain_data(domain_w))) 
+    {
+        return -1;
+    }
 }
