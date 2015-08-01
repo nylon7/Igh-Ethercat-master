@@ -245,6 +245,42 @@ void check_master_state(void)
 void cyclic_task()
 {
 
+
+		// write process data
+
+                if(servo_flag==1)
+		{
+			//servo off
+                	EC_WRITE_U16(domain_r_pd+ctrl_word, 0x0006 );
+                }
+
+                else if( (temp[0]&0x004f) == 0x0040  )
+		{
+                	EC_WRITE_U16(domain_r_pd+ctrl_word, 0x0006 );
+                }
+
+                else if( (temp[0]&0x006f) == 0x0021)
+		{
+                	EC_WRITE_U16(domain_r_pd+ctrl_word, 0x0007 );
+                }
+                
+		else if( (temp[0]&0x006f) == 0x0023)
+		{
+                	EC_WRITE_U16(domain_r_pd+ctrl_word, 0x000f );
+                	EC_WRITE_S32(domain_r_pd+tar_pos,0);
+                	EC_WRITE_S32(domain_r_pd+tar_vel, 0xffff);
+                	EC_WRITE_S32(domain_r_pd+max_torq, 0xf00);
+
+                }
+		
+		//operation enabled
+                else if( (temp[0]&0x006f) == 0x0027)
+		{
+                        EC_WRITE_S32(domain_r_pd+tar_pos, (move_value+=2000) );
+                        EC_WRITE_U16(domain_r_pd+ctrl_word, 0x001f);
+
+                }
+
 }
 
 int main(int argc, char **argv)
