@@ -124,7 +124,15 @@ static ec_sync_info_t slave_0_syncs[] =
 
 void cyclic_task()
 {
+	// receive process data
+    	ecrt_master_receive(master);
+   	ecrt_domain_process(domain);
 
+
+	// send process data
+    	ecrt_domain_queue(domain);
+    	ecrt_master_send(master);
+	
 }
 
 /****************************************************************************/
