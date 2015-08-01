@@ -88,7 +88,15 @@ static unsigned int blink = 0;
 
 void cyclic_task()
 {
+    // receive process data
+    ecrt_master_receive(master);
+    ecrt_domain_process(domain_r);
+    ecrt_domain_process(domain_w);
 
+    // send process data
+    ecrt_domain_queue(domain_r);
+    ecrt_domain_queue(domain_w);
+    ecrt_master_send(master);
 }
 
 //
